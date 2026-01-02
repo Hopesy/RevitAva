@@ -5,7 +5,7 @@ namespace RevitAva.Extensions;
 
 public static class DataContextExtension
 {
-    public static UIApplication GetUIApplication(this UIControlledApplication application)
+    public static UIApplication? GetUIApplication(this UIControlledApplication application)
     {
         var type = typeof(UIControlledApplication);
         var propertie = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic)

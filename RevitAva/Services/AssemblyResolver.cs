@@ -18,7 +18,7 @@ namespace RevitAva.Services
             _logger.LogInformation("程序集解析器已初始化");
         }
 
-        private static Assembly? OnAssemblyResolve(object sender, ResolveEventArgs args)
+        private static Assembly? OnAssemblyResolve(object? sender, ResolveEventArgs args)
         {
             try
             {
