@@ -1,128 +1,224 @@
 # RevitAva
 
-基于 Avalonia UI 框架的 Revit 插件项目。
+> 在 Revit 插件中使用 Avalonia UI 框架构建现代化用户界面。
 
-## 项目简介
+- **.NET 8** + **Avalonia UI 11.2.7**
+- **Revit 2026** + **Tuna.Revit.Extensions**
+- **CommunityToolkit.Mvvm** + **Microsoft.Extensions.Hosting**
 
-RevitAva 是一个 Revit 2026 插件，使用 Avalonia UI 框架构建用户界面。Avalonia 是一个跨平台的 XAML UI 框架，提供了现代化的 UI 开发体验。
+---
 
-## 技术栈
+## 安装依赖
 
-- **.NET 8** (C# 12)
-- **Avalonia UI 11.2.7** - 跨平台 UI 框架
-- **CommunityToolkit.Mvvm** - MVVM 框架
-- **Microsoft.Extensions.Hosting** - 依赖注入和应用程序生命周期管理
-- **Serilog** - 日志框架
-- **Tuna.Revit.Extensions** - Revit API 扩展
+### 必需的 NuGet 包
 
-## 项目结构
+```bash
+# Avalonia 核心包
+dotnet add package Avalonia --version 11.2.7
+dotnet add package Avalonia.Desktop --version 11.2.7
+dotnet add package Avalonia.Themes.Fluent --version 11.2.7
 
-```
-RevitAva/
-├── Application.cs          # Revit 插件入口点
-├── Host.cs                 # 应用程序主机配置
-├── Commands/               # Revit 命令
-│   └── SettingCommand.cs
-├── Views/                  # Avalonia 视图
-│   ├── SettingView.axaml
-│   └── SettingView.axaml.cs
-├── ViewModels/             # 视图模型
-│   └── SettingViewModel.cs
-├── Services/               # 服务层
-│   └── AssemblyResolver.cs
-├── Extensions/             # 扩展方法
-└── Resources/              # 资源文件
-    ├── Icons/
-    └── Styles/
+# Debug 模式下的开发工具（F12 调试）
+dotnet add package Avalonia.Diagnostics --version 11.2.7
+
+# MVVM 框架（可选）
+dotnet add package CommunityToolkit.Mvvm --version 8.4.0
 ```
 
-## Avalonia 在 Revit 插件中的技术架构
+### 项目配置
 
-### 为什么可以在 Revit 中使用 Avalonia？
+在 `.csproj` 文件中添加：
 
-Revit 是基于 WPF 的应用程序，而 Avalonia 可以与 WPF 共存，因为它们都基于 Windows 的底层消息循环机制。
-
-#### 技术原理
-
-```
-┌─────────────────────────────���───────┐
-│   Windows 操作系统消息循环           │
-│   (GetMessage/DispatchMessage)      │
-└─────────────────────────────────────┘
-           ↓              ↓
-    ┌──────────┐    ┌──────────┐
-    │   WPF    │    │ Avalonia │
-    │ (Revit)  │    │  窗口    │
-    └──────────┘    └──────────┘
+```xml
+<PropertyGroup>
+  <!-- 启用 Avalonia 编译时绑定 -->
+  <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+</PropertyGroup>
 ```
 
-**关键点**：
-- Avalonia 和 WPF 共享的是**操作系统级别的消息循环**，而不是"借用"彼此的消息循环
-- 每个窗口都有自己的 HWND（窗口句柄）和窗口过程
-- `Avalonia.Win32.dll` 负责与 Windows API 交互，创建和管理窗口
+---
 
-### 初始化流程
+## 快速开始：在 Revit 插件中使用 Avalonia
 
-在 `Application.cs` 中，Avalonia 的初始化非常简单：
+### 步骤 1：初始化 Avalonia 框架
+
+在 Revit 插件的 `OnStartup` 方法中初始化 Avalonia：
 
 ```csharp
-private static void InitializeAvalonia()
+public class Application : IExternalApplication
 {
-    if (_avaloniaInitialized) return;
+    private static bool _avaloniaInitialized;
 
-    AppBuilder.Configure<Avalonia.Application>()
-        .UsePlatformDetect()      // 自动检测平台（Windows/Linux/macOS）
-        .LogToTrace()             // 启用日志输出
-        .SetupWithoutStarting();  // 初始化但不启动应用程序生命周期
+    public Result OnStartup(UIControlledApplication application)
+    {
+        // 初始化 Avalonia
+         AppBuilder.Configure<Avalonia.Application>()
+            .UsePlatformDetect()      // 1. 检测平台并加载对应后端
+            .LogToTrace()             // 2. 启用日志输出
+            .SetupWithoutStarting();  // 3. 初始化框架但不启动生命周期
+        // 4. 添加主题
+        Avalonia.Application.Current!.Styles.Add(new FluentTheme());
 
-    // 设置 Fluent 主题
-    Avalonia.Application.Current!.Styles.Add(new FluentTheme());
-
-    _avaloniaInitialized = true;
+        return Result.Succeeded;
+    }
 }
 ```
 
-**重要**：
-- 使用 `SetupWithoutStarting()` 而不是 `StartWithClassicDesktopLifetime()`
-- 不能使用 `UseDesktopLifetime()`，因为 Revit 已经控制了应用程序生命周期
-- 只需初始化 Avalonia 框架，窗口会自动使用 Windows 消息循环
-
-### 显示窗口
-
-显示 Avalonia 窗口非常简单：
+### 步骤 2：创建 Avalonia 窗口
 
 ```csharp
-var window = new SettingView();
-window.Show();
+// Views/SettingView.axaml
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="RevitAva.Views.SettingView"
+        Title="设置" Width="800" Height="600">
+    <TextBlock Text="Hello Avalonia!" />
+</Window>
 ```
 
-窗口会自动：
-1. 创建 Windows 原生窗口（HWND）
-2. 注册到当前线程的消息队列
-3. 处理自己的 UI 事件
+```csharp
+// Views/SettingView.axaml.cs
+public partial class SettingView : Window
+{
+    public SettingView()
+    {
+        InitializeComponent();
+#if DEBUG
+        this.AttachDevTools();  // 启动插件后打开功能窗口按F12打开调试工具
+#endif
+    }
+}
+```
 
-## Avalonia 预览器限制
+### 步骤 3：在 Revit 命令中显示窗口
 
-### 为什么 Avalonia 预览器在类库项目中不工作？
+```csharp
+public class SettingCommand : IExternalCommand
+{
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+    {
+        var window = new SettingView();
+        window.Show();  // 显示非模态窗口
 
-**WPF vs Avalonia 预览器的区别**：
+        return Result.Succeeded;
+    }
+}
+```
 
-| 特性 | WPF | Avalonia |
-|------|-----|----------|
-| **平台** | Windows 原生 | 跨平台 |
-| **预览器类型** | IDE 内置 | 独立进程 |
-| **需要入口点** | ❌ 不需要 | ✅ 需要 |
-| **设计时支持** | 完整的设计时模式 | 需要运行时环境 |
-| **类库预览** | ✅ 直接支持 | ⚠️ 需要特殊配置 |
+**完成！** 就这么简单，三个步骤即可在 Revit 中使用 Avalonia。
 
-**原因**：
-- WPF 预览器直接解析 XAML 并渲染，不需要运行应用程序
-- Avalonia 预览器需要启动完整的应用程序实例，需要 Main 入口点
-- Revit 插件必须是类库（Library），不能有 Main 入口点
+---
+## 原理解释
 
-### 解决方案：使用 Avalonia DevTools
+### 初始化
 
-对于 Revit 插件开发，推荐使用**运行时调试**方式：
+> `UsePlatformDetect()` - 平台检测与后端加载
+
+```
+检测操作系统
+    ↓
+Windows → 加载 Avalonia.Win32.dll
+    ├─ Win32WindowImpl (窗口管理)
+    ├─ SkiaRenderTarget (Skia 渲染引擎)
+    ├─ Win32InputManager (输入处理)
+    └─ Win32ClipboardImpl (剪贴板)
+```
+
+**作用**：注册平台相关的服务，让 Avalonia 知道如何在 Windows 上创建窗口、渲染 UI、处理输入。
+
+ > `SetupWithoutStarting()` - 初始化框架
+
+- ✅ 初始化了 Avalonia 框架:平台服务、样式系统、资源系统等
+- ✅ 可以创建窗口和控件
+- ❌ **不启动消息循环**
+- ❌ **不创建应用程序生命周期管理器**
+
+
+> 添加主题。Avalonia 没有内置主题，必须手动添加。FluentTheme 提供了所有控件的默认样式。
+
+```csharp
+Avalonia.Application.Current!.Styles.Add(new FluentTheme());
+```
+
+### 生命周期
+
+> 为什么用 `SetupWithoutStarting()` 而不是 `StartWithClassicDesktopLifetime()`？
+    ↓
+* `StartWithClassicDesktopLifetime()` -> 阻塞在这里,Revit 主窗口无法显示,Revit 看起来"卡死"了
+*  `SetupWithoutStarting()` -> 初始化Avalonia框架配置但不启动应用程序生命周期，由Revit统一管理消息循环
+
+```csharp
+// Revit 插件
+AppBuilder.Configure<Avalonia.Application>()
+    .UsePlatformDetect()
+    .SetupWithoutStarting();  // ← 立即返回
+```
+
+**效果**：
+```
+Revit 启动
+    ↓
+加载插件
+    ↓
+调用 OnStartup()
+    ↓
+SetupWithoutStarting() ← 立即返回
+    ↓
+✅ Revit 继续启动
+✅ Revit 主窗口正常显示
+```
+
+### 消息循环本质
+
+> Avalonia窗口如何工作:所有 Windows 应用程序都依赖**消息循环**来处理 UI 事件
+
+*  Windows的消息分发基于HWND，不是基于框架
+* 每个窗口有自己的HWND和WndProc
+* 只要有一个消息循环在运行，所有窗口都能工作
+* Revit 的消息循环已经在运行了，只需要"注册"(创建窗口)，系统自动处理其余的
+
+```csharp
+// Windows 消息循环（简化）
+while (GetMessage(out MSG msg, IntPtr.Zero, 0, 0))
+{
+    // 1. 获取消息（鼠标点击、键盘输入等）
+    // 2. 分发消息到对应的窗口
+    DispatchMessage(ref msg);
+}
+```
+
+**消息流程**：
+```
+用户点击按钮
+    ↓
+Windows 生成 WM_LBUTTONDOWN 消息
+    ↓
+放入消息队列
+    ↓
+GetMessage() 取出消息
+    ↓
+DispatchMessage() 根据 HWND 分发
+    ↓
+调用窗口的 WndProc 处理
+```
+
+**关键点**：
+- ✅ Avalonia 窗口**自动注册**到 Windows 消息系统
+- ✅ 使用 Revit 的消息循环（共享操作系统的消息循环）
+- ✅ 不需要启动新的消息循环
+- ✅ 不会阻塞 Revit
+
+---
+
+## 开发
+
+### AXAML 预览
+
+> Avalonia预览器在Revit插件中不工作,推荐使用使用 **Avalonia DevTools**（运行时调试）
+
+- Avalonia 预览器需要应用程序入口点（`Main` 方法）
+- Revit 插件是类库项目（Library），没有 `Main` 入口点
+- 预览器需要启动完整的应用程序实例才能渲染 UI
 
 #### 1. 启用 DevTools
 
@@ -133,156 +229,83 @@ public SettingView()
 {
     InitializeComponent();
 
-#if DEBUG_R26
+#if DEBUG
     // Debug 模式下启用 DevTools（按 F12 打开）
     this.AttachDevTools();
 #endif
 }
 ```
 
+**注意**：确保已安装 `Avalonia.Diagnostics` 包：
+```bash
+dotnet add package Avalonia.Diagnostics --version 11.2.7
+```
+
 #### 2. 使用 DevTools
 
 1. 在 Revit 中加载插件
 2. 打开 Avalonia 窗口（点击"设置"按钮）
-3. 确保窗口处于焦点状态
+3. **确保窗口处于焦点状态**
 4. **按 `F12` 键**打开 DevTools
 
 #### 3. DevTools 功能
 
-- **Visual Tree（可视化树）**：查看控件层次结构
-- **Properties（属性）**：查看和修改控件属性
-- **Styles（样式）**：查看应用的样式
-- **Layout（布局）**：查看布局信息和边距
-- **Events（事件）**：监控事件触发
+| 功能            | 说明                                           |
+| --------------- | ---------------------------------------------- |
+| **Visual Tree** | 查看控件层次结构，类似 WPF 的 Live Visual Tree |
+| **Properties**  | 实时查看和修改控件属性                         |
+| **Styles**      | 查看应用的样式和样式优先级                     |
+| **Layout**      | 查看布局信息、边距、对齐方式                   |
+| **Events**      | 监控事件触发（PointerPressed、Click 等）       |
+| **Console**     | 查看日志输出和错误信息                         |
 
-## 开发指南
+#### 4. 调试技巧
 
-### 构建项目
-
-```bash
-# 使用 Debug R26 配置编译
-dotnet build -c "Debug R26"
-
-# 使用 Release R26 配置编译
-dotnet build -c "Release R26"
+**实时修改属性**：
+```
+1. 在 Visual Tree 中选择控件
+2. 在 Properties 面板修改属性值
+3. 立即看到效果（无需重新编译）
 ```
 
-**注意**：项目使用自定义配置名称（Debug R26 / Release R26），必须指定配置名称。
-
-### 调试流程
-
-1. **编译项目**：
-   ```bash
-   dotnet build -c "Debug R26"
-   ```
-
-2. **启动 Revit**：
-   - 项目配置为自动启动 Revit 2026
-   - 插件会自动复制到 Revit 插件目录
-
-3. **查看日志**：
-   - 日志文件位置：`bin/Debug R26/net8.0-windows/Logs/RevitAva.log`
-   - 控制台输出（如果从 Visual Studio 启动）
-
-4. **使用 DevTools**：
-   - 打开 Avalonia 窗口后按 `F12`
-   - 实时调试和调整 UI
-
-### 添加新窗口
-
-1. **创建 AXAML 文件**：
-   ```xml
-   <Window xmlns="https://github.com/avaloniaui"
-           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-           x:Class="RevitAva.Views.MyView"
-           Title="我的窗口">
-       <!-- UI 内容 -->
-   </Window>
-   ```
-
-2. **创建 Code-behind**：
-   ```csharp
-   public partial class MyView : Window
-   {
-       public MyView()
-       {
-           InitializeComponent();
-   #if DEBUG_R26
-           this.AttachDevTools();
-   #endif
-       }
-   }
-   ```
-
-3. **显示窗口**：
-   ```csharp
-   var window = new MyView();
-   window.Show();
-   ```
-
-### MVVM 模式
-
-项目使用 CommunityToolkit.Mvvm，推荐的 ViewModel 写法：
-
-```csharp
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-
-public partial class MyViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private string _title = "默认标题";
-
-    [RelayCommand]
-    private void DoSomething()
-    {
-        // 命令逻辑
-    }
-}
+**查找控件**：
+```
+1. 点击 DevTools 的"选择"按钮
+2. 在窗口中点击任意控件
+3. 自动在 Visual Tree 中定位该控件
 ```
 
-## 常见问题
-
-### Q: 为什么不能使用 Avalonia 预览器？
-
-A: Avalonia 预览器需要应用程序入口点（Main 方法），而 Revit 插件是类库项目。使用 DevTools（F12）进行运行时调试是更好的选择。
-
-### Q: 如何在 Avalonia 窗口中访问 Revit API？
-
-A: 通过依赖注入或静态服务定位器：
-
-```csharp
-// 在 Command 中传递 UIApplication
-public class MyCommand : IExternalCommand
-{
-    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
-    {
-        var uiApp = commandData.Application;
-        var window = new MyView(uiApp);
-        window.Show();
-        return Result.Succeeded;
-    }
-}
+**样式调试**：
+```
+1. 选择控件
+2. 查看 Styles 面板
+3. 查看哪些样式被应用，哪些被覆盖
 ```
 
-### Q: Avalonia 窗口是否会阻塞 Revit？
+### 项目结构
 
-A: 不会。使用 `Show()` 方法显示的窗口是非模态的，不会阻塞 Revit 主线程。如果需要模态窗口，使用 `ShowDialog()` 方法。
-
-### Q: 如何处理 Avalonia 和 WPF 的资源冲突？
-
-A: Avalonia 和 WPF 使用不同的命名空间和资源系统，不会冲突。注意：
-- WPF 使用 `pack://application:,,,/` URI
-- Avalonia 使用 `avares://` URI
-
-## 许可证
-
-请参考项目根目录的 LICENSE.txt 文件。
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request。
+```
+RevitAva/
+├── Application.cs          # Revit 插件入口，初始化 Avalonia
+├── Commands/               # Revit 命令
+├── Views/                  # Avalonia 视图（.axaml）
+├── ViewModels/             # 视图模型（MVVM）
+├── Services/               # 服务层
+└── Docs/                   # 详细文档
+    ├── 原理.md             # 技术原理详解
+    ├── 生命周期对比.md     # 生命周期详细对比
+    └── 消息循环详解.md     # 消息循环机制详解
+```
 
 ---
+### 核心要点总结
 
-**技术支持**：如有问题，请查看日志文件或使用 Avalonia DevTools 进行调试。
+1. **初始化**：使用 `SetupWithoutStarting()` 初始化框架，不启动生命周期
+2. **生命周期**：Revit 控制应用程序生命周期，Avalonia 只负责窗口
+3. **消息循环**：Avalonia 窗口自动注册到 Windows 消息系统，使用 Revit 的消息循环
+4. **共存原理**：通过独立的 HWND 和窗口过程，Avalonia 和 WPF 和平共处
+
+**更多详细信息**，请查看 `Docs/` 目录下的文档。
+---
+
+**License**: MIT
