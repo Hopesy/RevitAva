@@ -8,6 +8,7 @@ using Tuna.Revit.Extensions;
 using Avalonia;
 using Avalonia.Themes.Fluent;
 using RevitAva.Services;
+using Semi.Avalonia;
 
 namespace RevitAva;
 /*
@@ -33,7 +34,7 @@ public class Application : IExternalApplication
             .SetupWithoutStarting();//【关键】初始化Avalonia框架配置但不启动应用程序生命周期
         //.StartWithClassicDesktopLifetime
         // 设置 Fluent 主题
-        Avalonia.Application.Current!.Styles.Add(new FluentTheme());
+        Avalonia.Application.Current!.Styles.Add(new SemiTheme());
         logger.LogInformation("RevitAva插件启动");
         return Result.Succeeded;
     }
