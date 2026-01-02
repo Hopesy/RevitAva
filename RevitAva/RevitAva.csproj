@@ -16,6 +16,14 @@
     <RevitVersion>2026</RevitVersion>
     <TargetFramework>net8.0-windows</TargetFramework>
   </PropertyGroup>
+  <!-- 为 Debug R26 配置定义 DEBUG 符号 -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug R26'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <!-- 为 Release R26 配置定义 RELEASE 符号 -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release R26'">
+    <DefineConstants>RELEASE;TRACE</DefineConstants>
+  </PropertyGroup>
   <!--启动设置-->
   <PropertyGroup>
     <StartAction>Program</StartAction>
@@ -28,6 +36,8 @@
     <PackageReference Include="Avalonia.Desktop" Version="11.3.7" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.7" Condition="'$(Configuration)' == 'Debug R26'" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="HotAvalonia" Version="3.0.2" />
+    <PackageReference Include="HotAvalonia.Extensions" Version="3.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.4" />
     <PackageReference Include="Semi.Avalonia" Version="11.3.7.2" />

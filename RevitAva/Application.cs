@@ -28,10 +28,11 @@ public class Application : IExternalApplication
         // 初始化 Avalonia（借用 WPF 消息循环）
         // 第一次使用任何WPF类型时CLR自动加载Application类型,执行静态构造函数,初始化渲染引擎、主题样式等
         // Avalonia跨平台,不能假设环境,必须显式配置平台后端和主题
+        // 注意：HotAvalonia 会通过 MSBuild 任务自动启用热重载（Debug 模式下）
         AppBuilder.Configure<Avalonia.Application>()
             .UsePlatformDetect()
             .LogToTrace()
-            .SetupWithoutStarting();//【关键】初始化Avalonia框架配置但不启动应用程序生命周期
+            .SetupWithoutStarting(); //【关键】初始化Avalonia框架配置但不启动应用程序生命周期
         //.StartWithClassicDesktopLifetime
         // 设置 Fluent 主题
         Avalonia.Application.Current!.Styles.Add(new SemiTheme());
