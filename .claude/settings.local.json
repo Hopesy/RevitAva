@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(rm:*)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "Bash(ls:*)"
     ]
   }
 }
