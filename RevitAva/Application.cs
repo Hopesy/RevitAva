@@ -10,7 +10,12 @@ using Avalonia.Themes.Fluent;
 using RevitAva.Services;
 
 namespace RevitAva;
-
+/*
+ *  Windows的消息分发基于HWND，不是基于框架
+ * 每个窗口有自己的HWND和WndProc
+ * 只要有一个消息循环在运行，所有窗口都能工作
+ * Revit 的消息循环已经在运行了，只需要"注册"(创建窗口)，系统自动处理其余的
+ */
 public class Application : IExternalApplication
 {
     public Result OnStartup(UIControlledApplication application)
@@ -20,10 +25,13 @@ public class Application : IExternalApplication
         Host.Start();
         var logger = Host.GetService<ILogger<Application>>();
         // 初始化 Avalonia（借用 WPF 消息循环）
+        // 第一次使用任何WPF类型时CLR自动加载Application类型,执行静态构造函数,初始化渲染引擎、主题样式等
+        // Avalonia跨平台,不能假设环境,必须显式配置平台后端和主题
         AppBuilder.Configure<Avalonia.Application>()
             .UsePlatformDetect()
             .LogToTrace()
-            .SetupWithoutStarting();
+            .SetupWithoutStarting();//【关键】初始化Avalonia框架配置但不启动应用程序生命周期
+        //.StartWithClassicDesktopLifetime
         // 设置 Fluent 主题
         Avalonia.Application.Current!.Styles.Add(new FluentTheme());
         logger.LogInformation("RevitAva插件启动");

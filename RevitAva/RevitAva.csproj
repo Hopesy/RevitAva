@@ -23,16 +23,6 @@
     <StartArguments>/language CHS</StartArguments>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Converters\**" />
-    <Compile Remove="Models\**" />
-    <EmbeddedResource Remove="Converters\**" />
-    <EmbeddedResource Remove="Models\**" />
-    <None Remove="Converters\**" />
-    <None Remove="Models\**" />
-    <Page Remove="Converters\**" />
-    <Page Remove="Models\**" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.2.7" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
     <PackageReference Include="Avalonia.Desktop" Version="11.2.7" />
