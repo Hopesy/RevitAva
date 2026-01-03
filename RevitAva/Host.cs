@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using System.IO;
 using System.Reflection;
+using RevitAva.Services;
+using RevitAva.Services.Interfaces;
 
 namespace RevitAva;
 
@@ -37,6 +39,9 @@ public static class Host
             .CreateLogger());
         //【3】添加服务如View,ViewModel,Service
         //builder.Services.AddTransient<StartUpViewModel>();
+
+        // 注册主题服务为单例
+        builder.Services.AddSingleton<IThemeService, ThemeService>();
 
         host = builder.Build();
         host.Start();

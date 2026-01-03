@@ -1,13 +1,10 @@
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RevitAva.Commands;
-using System.Reflection;
 using Tuna.Revit.Extensions;
 using Avalonia;
-using Avalonia.Themes.Fluent;
-using RevitAva.Services;
+using RevitAva.Services.Interfaces;
 using Semi.Avalonia;
 
 namespace RevitAva;
@@ -23,6 +20,7 @@ public class Application : IExternalApplication
     {
         //创建UI面板，添加按钮
         this.CreateRibbon(application);
+        // 启动 Host（必须在初始化 Avalonia 之前）
         Host.Start();
         var logger = Host.GetService<ILogger<Application>>();
         // 初始化 Avalonia（借用 WPF 消息循环）
@@ -34,8 +32,11 @@ public class Application : IExternalApplication
             .LogToTrace()
             .SetupWithoutStarting(); //【关键】初始化Avalonia框架配置但不启动应用程序生命周期
         //.StartWithClassicDesktopLifetime
-        // 设置 Fluent 主题
+        // 添加 SemiTheme 到样式集合
         Avalonia.Application.Current!.Styles.Add(new SemiTheme());
+        // 初始化主题服务（会自动根据 Revit 当前主题设置 Avalonia 主题）
+        var themeService = Host.GetService<IThemeService>();
+        themeService.Initialize(application);
         logger.LogInformation("RevitAva插件启动");
         return Result.Succeeded;
     }
@@ -44,7 +45,14 @@ public class Application : IExternalApplication
     {
         var logger = Host.GetService<ILogger<Application>>();
         logger.LogInformation("RevitAva插件关闭");
+
+        // 释放主题服务资源
+        var themeService = Host.GetService<IThemeService>();
+        themeService.Dispose();
+
+        // 停止 Host
         Host.Stop();
+
         return Result.Succeeded;
     }
     private void CreateRibbon(UIControlledApplication application)

@@ -1,6 +1,6 @@
 # RevitAva
 
-> 在 Revit 插件中使用 Avalonia UI 框架构建现代化用户界面。
+> 在 Revit 插件中使用 Avalonia UI 框架构建现代化用户界面。.net framework也是支持的，本项目只是拿.net8举例。
 
 - **.NET 8** + **Avalonia UI 11.2.7**
 - **Revit 2026** + **Tuna.Revit.Extensions**
@@ -16,12 +16,13 @@
 # Avalonia 核心包
 dotnet add package Avalonia --version 11.2.7
 dotnet add package Avalonia.Desktop --version 11.2.7
+# Avalonia 控件依赖于主题包才能显示
 dotnet add package Avalonia.Themes.Fluent --version 11.2.7
 
-# Debug 模式下的开发工具（F12 调试）
+# Debug 模式下的开发工具（F12调试）
 dotnet add package Avalonia.Diagnostics --version 11.2.7
 
-# MVVM 框架（可选）
+# MVVM 框架（可选，Avalonia可以从WPF无缝切换）
 dotnet add package CommunityToolkit.Mvvm --version 8.4.0
 ```
 
@@ -38,7 +39,8 @@ dotnet add package CommunityToolkit.Mvvm --version 8.4.0
 
 ---
 
-## 快速开始：在 Revit 插件中使用 Avalonia
+## 快速开始
+
 
 ### 步骤 1：初始化 Avalonia 框架
 
@@ -51,14 +53,16 @@ public class Application : IExternalApplication
 
     public Result OnStartup(UIControlledApplication application)
     {
-        // 初始化 Avalonia
+        // 【重点】后续使用标准方式初始化-使用自定义Application(推荐)
+        // 直接使用Avalonia.Application初始化
          AppBuilder.Configure<Avalonia.Application>()
             .UsePlatformDetect()      // 1. 检测平台并加载对应后端
             .LogToTrace()             // 2. 启用日志输出
             .SetupWithoutStarting();  // 3. 初始化框架但不启动生命周期
         // 4. 添加主题
         Avalonia.Application.Current!.Styles.Add(new FluentTheme());
-
+        // 5.添加style和resource
+        // ...
         return Result.Succeeded;
     }
 }
@@ -105,7 +109,23 @@ public class SettingCommand : IExternalCommand
 }
 ```
 
-**完成！** 就这么简单，三个步骤即可在 Revit 中使用 Avalonia。
+### 步骤 4(可选)：c#代码加载style和Resource
+
+```c#
+//在标准启动方式中是使用xml引擎自动处理的，详后续案例
+// 1. 加载样式文件 (根节点是 <Styles>)
+// 这里的 baseUri (第一个参数) 可以指向目录，Source 指向具体文件
+Avalonia.Application.Current!.Styles.Add(new StyleInclude(new Uri("avares://RevitAva/Styles/"))
+{
+    Source = new Uri("avares://RevitAva/Styles/ButtonStyles.axaml")
+});
+// 2. 加载资源文件 (根节点是 <ResourceDictionary>)
+// 注意：资源是添加到 Resources.MergedDictionaries 中，且使用 ResourceInclude 类
+Avalonia.Application.Current!.Resources.MergedDictionaries.Add(new ResourceInclude(new Uri("avares://RevitAva/Resources/"))
+{
+    Source = new Uri("avares://RevitAva/Resources/Colors.axaml")
+});
+```
 
 ---
 ## 原理解释
@@ -208,6 +228,146 @@ DispatchMessage() 根据 HWND 分发
 - ✅ 不需要启动新的消息循环
 - ✅ 不会阻塞 Revit
 
+## 样式
+
+### 主题切换
+
+> 本项目是在Revit插件环境中使用 `Avalonia + Semi.Avalonia`库，Semi完全适配了 Avalonia 原生的 `ThemeVariant` 机制,不需要任何复杂的 ResourceDictionary 替换操作，只需要修改`RequestedThemeVariant`全局属性即可切换主题
+
+* 明确对象：使用 Avalonia.Application.Current 而不是 WPF 的 Application。
+* 线程安全：使用 Avalonia.Threading.Dispatcher.UIThread.Post 来确保切换动作在 UI 线程执行。
+* 从Revit2024开始，Revit 原生支持深色模式。可以读取Revit的当前主题设置，并自动同步Semi的主题。
+
+```C#
+using Autodesk.Revit.UI; // 用于获取 Revit 主题事件
+using Avalonia.Styling;
+using AvaApp = Avalonia.Application;
+
+public class ThemeService
+{
+    // 在 OnStartup 中调用此方法
+    public void SubscribeRevitTheme(UIControlledApplication application)
+    {
+        // 1. 初始化时同步一次
+        SyncTheme(application.Theme);
+        // 2. 监听 Revit 主题变化事件 (Revit 2024+ API)
+        application.ThemeChanged += (sender, args) =>
+        {
+            SyncTheme(args.Theme);
+        };
+    }
+    private void SyncTheme(UITheme revitTheme)
+    {
+        var avaApp = AvaApp.Current;
+        if (avaApp == null) return;
+        // 确保在 UI 线程操作（Revit 的主线程）
+        // 虽然只是设置属性，但涉及 UI 重绘，建议确保线程安全
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (revitTheme == UITheme.Dark)
+            {
+                avaApp.RequestedThemeVariant = ThemeVariant.Dark;
+            }
+            else
+            {
+                // Revit 的 Light 或 System 默认通常对应 Semi 的 Light
+                avaApp.RequestedThemeVariant = ThemeVariant.Light;
+            }
+        });
+    }
+}
+```
+
+## 标准方式
+
+### 标准启动方式加载
+
+> 采用标准的 App.axaml + App.axaml.cs (自定义 Application 类) 模式，可以让你把样式管理的工作完全交给 XAML 引擎
+
+| 方式          | 优点                                    | 缺点                       | 适用场景                 |
+| ------------- | --------------------------------------- | -------------------------- | ------------------------ |
+| **App.axaml** | 结构清晰、XAML 语法简洁、支持设计器预览 | 需要自定义 Application 类  | 大型项目、多窗口应用     |
+| **代码加载**  | 灵活、可动态控制加载顺序                | 代码冗长、不支持设计时预览 | 小型插件、需动态切换主题 |
+
+
+1. 自定义`Avalonia Application`
+
+```C#
+public partial class RevitAvaloniaApp : Avalonia.Application
+{
+    public override void Initialize()
+    {
+        // 加载 App.axaml
+        AvaloniaXamlLoader.Load(this);
+    }
+}
+```
+
+```xml
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:semiTheme="clr-namespace:Semi.Avalonia;assembly=Semi.Avalonia">
+    <Application.Styles>
+        <!-- 基础主题 -->
+        <semiTheme:SemiTheme />
+        <!-- 合并自定义控件样式 -->
+        <StyleInclude Source="avares://RevitAva/Resources/Styles/Controls/Buttons.axaml"/>
+    </Application.Styles>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 合并资源字典 -->
+                <ResourceInclude Source="/Resources/Styles/Colors.axaml"/>
+                <ResourceInclude Source="/Resources/Styles/Brushes.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+```
+2. Revit插件入口改造
+```csharp
+public class Application : IExternalApplication
+{
+    public Result OnStartup(UIControlledApplication application)
+    {
+        CreateRibbon(application);
+        Host.Start();
+        // 初始化 Avalonia
+        AppBuilder.Configure<RevitAvaloniaApp>()
+            .UsePlatformDetect()
+            .LogToTrace()
+            .SetupWithoutStarting();
+        return Result.Succeeded;
+    }
+    // ... 其他代码
+}
+```
+### 完整示例项目结构
+
+```
+RevitAva/
+├── Resources/
+│   ├── Styles/
+│   │   ├── Colors.axaml                 # 颜色定义/画刷/字体等
+│   │   ├── Controls/
+│   │       ├── Buttons.axaml
+│   ├── Icons/
+│   │   ├── setting.png
+│   │   └── start.png
+│   └── Images/
+├── Views/
+│   ├── SettingView.axaml
+│   └── ...
+├── ViewModels/
+├── Services/
+│   └── ThemeManagerService.cs           # 主题管理服务
+├── Application.cs                       # Revit 入口
+├── RevitAvaloniaApp.axaml.cs            # 自定义 Avalonia Application
+├── RevitAvaloniaApp.axaml               # 样式和资源都合并到这里
+├── Host.cs
+├── appsettings.json
+└── RevitAva.csproj
+```
 ---
 
 ## 开发
@@ -290,20 +450,6 @@ HotAvalonia 3.0.2 **通过 MSBuild 任务自动集成**，无需在代码中显�
 <!-- RevitAva.csproj -->
 <PackageReference Include="HotAvalonia" Version="3.0.2" />
 <PackageReference Include="HotAvalonia.Extensions" Version="3.0.2" />
-```
-### 项目结构
-
-```
-RevitAva/
-├── Application.cs          # Revit 插件入口，初始化 Avalonia
-├── Commands/               # Revit 命令
-├── Views/                  # Avalonia 视图（.axaml）
-├── ViewModels/             # 视图模型（MVVM）
-├── Services/               # 服务层
-└── Docs/                   # 详细文档
-    ├── 原理.md             # 技术原理详解
-    ├── 生命周期对比.md     # 生命周期详细对比
-    └── 消息循环详解.md     # 消息循环机制详解
 ```
 
 ---

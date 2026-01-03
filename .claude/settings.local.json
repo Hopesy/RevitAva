@@ -7,7 +7,8 @@
       "WebSearch",
       "WebFetch(domain:docs.avaloniaui.net)",
       "Bash(tree:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "WebFetch(domain:www.revitapidocs.com)"
     ]
   }
 }
