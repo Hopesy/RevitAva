@@ -13,6 +13,7 @@
         <entry key="RevitAva/Resources/Styles/Resources1.axaml" value="RevitAva/RevitAva.csproj" />
         <entry key="RevitAva/Resources/Styles/TemplatedControl1.axaml" value="RevitAva/RevitAva.csproj" />
         <entry key="RevitAva/Views/AvaloniaApp.axaml" value="RevitAva/RevitAva.csproj" />
+        <entry key="RevitAva/Views/CurveArrayView.axaml" value="RevitAva/RevitAva.csproj" />
         <entry key="RevitAva/Views/SettingView.axaml" value="RevitAva/RevitAva.csproj" />
       </map>
     </option>

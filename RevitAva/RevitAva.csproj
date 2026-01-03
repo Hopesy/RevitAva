@@ -74,13 +74,6 @@
     <None Remove="Resources\Icons\scatter.png" />
     <Resource Include="Resources\Icons\scatter.png" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Views\AvaloniaApp.axaml.cs">
-      <DependentUpon>AvaloniaApp.axaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
   <Target Name="CopyAddin" BeforeTargets="PostBuildEvent">
     <!--复制addin-->
     <Copy SourceFiles="$(ProjectDir)\RevitAva.addin" DestinationFolder="C:\ProgramData\Autodesk\Revit\Addins\$(RevitVersion)" />

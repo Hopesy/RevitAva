@@ -43,6 +43,9 @@ public static class Host
         // 注册主题服务为单例
         builder.Services.AddSingleton<IThemeService, ThemeService>();
 
+        // 注册 Revit 服务为单例
+        builder.Services.AddSingleton<IRevitService, RevitService>();
+
         host = builder.Build();
         host.Start();
     }

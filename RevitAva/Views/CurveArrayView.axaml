@@ -1,0 +1,163 @@
+<Window x:Class="RevitAva.Views.CurveArrayView"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:RevitAva.ViewModels"
+        Title="{Binding Title}"
+        Width="600"
+        Height="500"
+        d:DesignHeight="500"
+        d:DesignWidth="600"
+        x:DataType="vm:CurveArrayViewModel"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d">
+
+    <Window.Styles>
+        <!-- 局部样式：设置统一的控件间距 -->
+        <Style Selector="StackPanel > :is(Control)">
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题区域 -->
+        <TextBlock Grid.Row="0"
+                   Margin="0,0,0,20"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Text="{Binding Title}" />
+
+        <!-- 主内容区域 -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16">
+                <!-- 族类型选择区域 -->
+                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Text="1. 选择族类型" />
+
+                        <Button Margin="0,12,0,0"
+                                HorizontalAlignment="Stretch"
+                                Classes="Primary"
+                                Command="{Binding LoadFamilySymbolsCommand}"
+                                Content="加载族类型"
+                                IsEnabled="{Binding !IsProcessing}" />
+
+                        <ComboBox Margin="0,12,0,0"
+                                  HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding FamilySymbols}"
+                                  SelectedItem="{Binding SelectedFamilySymbol}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- 曲线选择区域 -->
+                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Text="2. 选择模型线" />
+
+                        <Button Margin="0,12,0,0"
+                                HorizontalAlignment="Stretch"
+                                Classes="Success"
+                                Command="{Binding PickCurveCommand}"
+                                Content="选择曲线"
+                                IsEnabled="{Binding !IsProcessing}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 阵列参数区域 -->
+                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Text="3. 设置阵列参数" />
+
+                        <TextBlock Margin="0,12,0,4"
+                                   Text="阵列数量:" />
+                        <NumericUpDown HorizontalAlignment="Stretch"
+                                       Minimum="1"
+                                       Maximum="1000"
+                                       Value="{Binding ArrayCount}" />
+
+                        <CheckBox Margin="0,12,0,0"
+                                  Content="包含端点"
+                                  IsChecked="{Binding IncludeEndPoints}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 执行区域 -->
+                <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel>
+                        <TextBlock FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Text="4. 执行阵列" />
+
+                        <Button Margin="0,12,0,0"
+                                HorizontalAlignment="Stretch"
+                                Classes="Warning"
+                                Command="{Binding ExecuteArrayCommand}"
+                                Content="执行阵列"
+                                IsEnabled="{Binding !IsProcessing}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="2"
+                Margin="0,16,0,0"
+                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 加载指示器 -->
+                <ProgressBar Grid.Column="0"
+                             Width="20"
+                             Height="20"
+                             Margin="0,0,12,0"
+                             IsIndeterminate="True"
+                             IsVisible="{Binding IsProcessing}" />
+
+                <!-- 状态文本 -->
+                <TextBlock Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Text="{Binding StatusMessage}"
+                           TextWrapping="Wrap" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -58,6 +58,8 @@ public class Application : IExternalApplication
     private void CreateRibbon(UIControlledApplication application)
     {
         var tab = application.AddRibbonTab("RevitAva");
+
+        // 服务面板
         tab.AddRibbonPanel("服务", panel =>
         {
             panel.AddPushButton<SettingCommand>(button =>
@@ -66,6 +68,18 @@ public class Application : IExternalApplication
                         new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/setting.png"));
                     button.ToolTip = "设置MCP服务";
                     button.Title = "设置";
+                });
+        });
+
+        // 建模工具面板
+        tab.AddRibbonPanel("建模工具", panel =>
+        {
+            panel.AddPushButton<CurveArrayCommand>(button =>
+                {
+                    button.LargeImage = new BitmapImage(
+                        new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/array.png"));
+                    button.ToolTip = "沿曲线阵列常规模型族";
+                    button.Title = "曲线阵列";
                 });
         });
     }
