@@ -281,7 +281,16 @@ dotnet add package Avalonia.Diagnostics --version 11.2.7
 2. 查看 Styles 面板
 3. 查看哪些样式被应用，哪些被覆盖
 ```
+#### 热重载
 
+Avalonia需配置 **HotAvalonia 3.0.2**，支持在 Debug 模式下进行 XAML 热重载,
+HotAvalonia 3.0.2 **通过 MSBuild 任务自动集成**，无需在代码中显式调用
+
+```xml
+<!-- RevitAva.csproj -->
+<PackageReference Include="HotAvalonia" Version="3.0.2" />
+<PackageReference Include="HotAvalonia.Extensions" Version="3.0.2" />
+```
 ### 项目结构
 
 ```

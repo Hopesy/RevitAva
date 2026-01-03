@@ -4,7 +4,10 @@
       "Bash(rm:*)",
       "Bash(ren:*)",
       "Bash(ls:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:docs.avaloniaui.net)",
+      "Bash(tree:*)",
+      "Bash(powershell:*)"
     ]
   }
 }

@@ -5,6 +5,9 @@
       <map>
         <entry key="RevitAva.Previewer/App.axaml" value="RevitAva.Previewer/RevitAva.Previewer.csproj" />
         <entry key="RevitAva/App.axaml" value="RevitAva/RevitAva.csproj" />
+        <entry key="RevitAva/Resources/Styles/Buttom.axaml" value="RevitAva/RevitAva.csproj" />
+        <entry key="RevitAva/Resources/Styles/Resources1.axaml" value="RevitAva/RevitAva.csproj" />
+        <entry key="RevitAva/Resources/Styles/TemplatedControl1.axaml" value="RevitAva/RevitAva.csproj" />
         <entry key="RevitAva/Views/SettingView.axaml" value="RevitAva/RevitAva.csproj" />
       </map>
     </option>
