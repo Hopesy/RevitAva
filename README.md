@@ -14,13 +14,13 @@
 
 ```bash
 # Avalonia 核心包
-dotnet add package Avalonia --version 11.2.7
-dotnet add package Avalonia.Desktop --version 11.2.7
+dotnet add package Avalonia --version 11.3.7
+dotnet add package Avalonia.Desktop --version 11.3.7
 # Avalonia 控件依赖于主题包才能显示
-dotnet add package Avalonia.Themes.Fluent --version 11.2.7
+dotnet add package Avalonia.Themes.Fluent --version 11.3.7
 
 # Debug 模式下的开发工具（F12调试）
-dotnet add package Avalonia.Diagnostics --version 11.2.7
+dotnet add package Avalonia.Diagnostics --version 11.3.7
 
 # MVVM 框架（可选，Avalonia可以从WPF无缝切换）
 dotnet add package CommunityToolkit.Mvvm --version 8.4.0
@@ -293,11 +293,15 @@ public class ThemeService
 1. 自定义`Avalonia Application`
 
 ```C#
-public partial class RevitAvaloniaApp : Avalonia.Application
+using Avalonia.Markup.Xaml;
+namespace RevitAva;
+public partial class AvaloniaApp: Avalonia.Application
 {
     public override void Initialize()
     {
-        // 加载 App.axaml
+        // 1. 获取 this.GetType() => RevitAva.AvaloniaApp
+        // 2. 在嵌入资源中查找与该类型关联的 XAML
+        // 3. 通过 x:Class 建立的映射关系定位到 AvaloniaApp.axaml
         AvaloniaXamlLoader.Load(this);
     }
 }
@@ -306,7 +310,8 @@ public partial class RevitAvaloniaApp : Avalonia.Application
 ```xml
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:semiTheme="clr-namespace:Semi.Avalonia;assembly=Semi.Avalonia">
+             xmlns:semiTheme="clr-namespace:Semi.Avalonia;assembly=Semi.Avalonia"
+             x:Class="RevitAva.AvaloniaApp">
     <Application.Styles>
         <!-- 基础主题 -->
         <semiTheme:SemiTheme />
@@ -332,8 +337,8 @@ public class Application : IExternalApplication
     {
         CreateRibbon(application);
         Host.Start();
-        // 初始化 Avalonia
-        AppBuilder.Configure<RevitAvaloniaApp>()
+        // 初始化自定义 Avalonia Application
+        AppBuilder.Configure<AvaloniaApp>()
             .UsePlatformDetect()
             .LogToTrace()
             .SetupWithoutStarting();

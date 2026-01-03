@@ -63,19 +63,19 @@ public class ThemeService : IThemeService
         try
         {
             // 确保 Avalonia Application 已初始化
-            if (Avalonia.Application.Current == null)
+            if (global::Avalonia.Application.Current == null)
             {
                 _logger.LogWarning("Avalonia.Application.Current 为 null，无法应用主题");
                 return;
             }
 
             // 使用 Avalonia 的线程调度器确保在 UI 线程上执行
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 try
                 {
                     // 设置 Avalonia 的主题变体
-                    Avalonia.Application.Current.RequestedThemeVariant = isDark
+                    global::Avalonia.Application.Current.RequestedThemeVariant = isDark
                         ? ThemeVariant.Dark
                         : ThemeVariant.Light;
 
