@@ -77,12 +77,13 @@ public partial class CurveArrayViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 执行阵列（窗口关闭后由外部调用）
+    /// 执行阵列（窗口关闭后由 Command 调用，在 Revit 线程执行）
     /// </summary>
     public void ExecuteArray()
     {
-        if (!ShouldExecute)
+        if (!ShouldExecute || SelectedFamilySymbol == null)
             return;
+
         // 测试：直接创建一堵墙
         using var transaction = new Transaction(_document, "测试创建墙");
         transaction.Start();
