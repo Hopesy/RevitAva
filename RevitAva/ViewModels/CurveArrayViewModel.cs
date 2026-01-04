@@ -1,47 +1,43 @@
 using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using RevitAva.Messages;
 using RevitAva.Services.Interfaces;
+using RevitAva.Views;
 using System.Collections.ObjectModel;
 
 namespace RevitAva.ViewModels;
 
 public partial class CurveArrayViewModel : ObservableObject
 {
-    private UIDocument _uiDocument = null!;
-    private Document _document = null!;
-    private readonly IRevitService _revitService;
-    // 关闭窗口的回调
-    public Action? CloseAction { get; set; }
-    public ObservableCollection<FamilySymbolItem> FamilySymbols { get; } = new();
+    private readonly IRevitContext _revitContext;
+    private readonly ICurveArrayService _curveArrayService;
+
+    public bool ShouldExecute { get; private set; }
+    public ObservableCollection<FamilySymbolItem> FamilySymbols { get; } = [];
+
     [ObservableProperty]
     private FamilySymbolItem? _selectedFamilySymbol;
+
     [ObservableProperty]
     private int _count = 5;
-    
+
     [ObservableProperty]
     private bool _includeEndPoints = true;
 
-    public CurveArrayViewModel(IRevitService revitService)
+    public CurveArrayViewModel(IRevitContext revitContext, ICurveArrayService curveArrayService, IMessenger messenger)
     {
-        _revitService = revitService;
-    }
-
-    /// <summary>
-    /// 初始化 Revit 上下文
-    /// </summary>
-    public void Initialize(UIDocument uiDocument, Document document)
-    {
-        _uiDocument = uiDocument;
-        _document = document;
+        _revitContext = revitContext;
+        _curveArrayService = curveArrayService;
         LoadFamilySymbols();
     }
-    
-    // 加载常规模型族类型
+
     private void LoadFamilySymbols()
     {
-        var symbols = _revitService.GetAllFamilySymbols(_document);
+        FamilySymbols.Clear();
+        var symbols = _curveArrayService.GetAllFamilySymbols(_revitContext.Document);
+
         foreach (var symbol in symbols)
         {
             FamilySymbols.Add(new FamilySymbolItem(symbol));
@@ -53,67 +49,51 @@ public partial class CurveArrayViewModel : ObservableObject
         }
     }
 
-    // 需要执行的标记
-    public bool ShouldExecute { get; private set; }
-    /// 确认命令
     [RelayCommand]
     private void Confirm()
     {
         if (SelectedFamilySymbol == null || Count <= 0)
             return;
+
         ShouldExecute = true;
-        ExecuteArray();
-        CloseAction?.Invoke();
+        WeakReferenceMessenger.Default.Send(new CloseWindowMessage(typeof(CurveArrayView)));
     }
 
-    /// <summary>
-    /// 取消命令
-    /// </summary>
     [RelayCommand]
     private void Cancel()
     {
         ShouldExecute = false;
-        CloseAction?.Invoke();
+        WeakReferenceMessenger.Default.Send(new CloseWindowMessage(typeof(CurveArrayView)));
     }
 
     /// <summary>
-    /// 执行阵列（窗口关闭后由 Command 调用，在 Revit 线程执行）
+    /// 窗口关闭后执行
     /// </summary>
-    public void ExecuteArray()
+    public void Execute()
     {
         if (!ShouldExecute || SelectedFamilySymbol == null)
             return;
 
-        // 测试：直接创建一堵墙
-        using var transaction = new Transaction(_document, "测试创建墙");
+        var curve = _curveArrayService.PickModelCurve(_revitContext.UIDocument);
+        if (curve == null)
+            return;
+
+        using var transaction = new Transaction(_revitContext.Document, "沿曲线阵列");
         transaction.Start();
-        
-        var level = new FilteredElementCollector(_document)
-            .OfClass(typeof(Level))
-            .FirstElement() as Level;
-        
-        if (level != null)
-        {
-            var start = new XYZ(0, 0, 0);
-            var end = new XYZ(10, 0, 0);
-            var line = Line.CreateBound(start, end);
-            Wall.Create(_document, line, level.Id, false);
-        }
-        
+
+        _curveArrayService.ArrayFamilyAlongCurve(
+            _revitContext.Document,
+            SelectedFamilySymbol.Symbol,
+            curve,
+            Count,
+            IncludeEndPoints);
+
         transaction.Commit();
     }
 }
 
-/// <summary>
-/// 族类型包装类，用于 UI 显示
-/// </summary>
-public class FamilySymbolItem
+public class FamilySymbolItem(FamilySymbol symbol)
 {
-    public FamilySymbol Symbol { get; }
+    public FamilySymbol Symbol { get; } = symbol;
     public string DisplayName => $"{Symbol.FamilyName} : {Symbol.Name}";
-
-    public FamilySymbolItem(FamilySymbol symbol)
-    {
-        Symbol = symbol;
-    }
 }

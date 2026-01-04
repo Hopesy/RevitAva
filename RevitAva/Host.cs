@@ -1,5 +1,5 @@
+using Autodesk.Revit.UI;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,23 +13,17 @@ namespace RevitAva;
 
 public static class Host
 {
-    private static IHost? host;
-    public static void Start()
+    private static IHost? _host;
+
+    public static void Start(UIApplication uiApplication)
     {
-        //【1】使用默认配置创建主机
         var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
         {
-            // 插件环境下默认的ContentRootPathRevit指向Revit.exe，因此这里需要修改为插件dll目录
             ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
         });
-        // 启用选项模式，注册并验证配置，使用数据注解验证，应用启动时验证
-        //builder.Services.AddOptions<SocketSettings>()
-        //    .Bind(builder.Configuration.GetSection(SocketSettings.SectionName))
-        //    .ValidateDataAnnotations()
-        //    .ValidateOnStart();
-        //【2】配置日志为Serilog（写入文件和控制台）
+
+        // 配置日志
         builder.Logging.ClearProviders();
-        // 构建完整日志目录路径并确保目录存在
         var logDirectory = Path.Combine(builder.Environment.ContentRootPath, "Logs");
         Directory.CreateDirectory(logDirectory);
         var logPath = Path.Combine(logDirectory, "RevitAva.log");
@@ -37,12 +31,14 @@ public static class Host
             .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
             .WriteTo.Console()
             .CreateLogger());
-        //【3】添加服务如View,ViewModel,Service
-        // 注册主题服务为单例
-        builder.Services.AddSingleton<IThemeService, ThemeService>();
 
-        // 注册 Revit 服务为单例
-        builder.Services.AddSingleton<IRevitService, RevitService>();
+        // 注册 Revit 上下文（单例）
+        builder.Services.AddSingleton<IRevitContext>(new RevitContext(uiApplication));
+        // 注册 Messenger（单例）
+        builder.Services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+        // 注册服务
+        builder.Services.AddSingleton<IThemeService, ThemeService>();
+        builder.Services.AddSingleton<ICurveArrayService, CurveArrayService>();
 
         // 注册 View 和 ViewModel
         builder.Services.AddTransient<Views.CurveArrayView>();
@@ -50,17 +46,14 @@ public static class Host
         builder.Services.AddTransient<Views.SettingView>();
         builder.Services.AddTransient<ViewModels.SettingViewModel>();
 
-        host = builder.Build();
-        host.Start();
+        _host = builder.Build();
+        _host.Start();
     }
+
     public static void Stop()
     {
-        //GetAwaiter()：获取 Task 的等待器;GetResult()：阻塞当前线程，直到StopAsync()完成
-        host!.StopAsync().GetAwaiter().GetResult();
+        _host?.StopAsync().GetAwaiter().GetResult();
     }
-    public static T GetService<T>() where T : class => host!.Services.GetRequiredService<T>();
-    public static IServiceProvider Services
-    {
-        get => host?.Services ?? throw new InvalidOperationException("Host is null.");
-    }
+
+    public static T GetService<T>() where T : class => _host!.Services.GetRequiredService<T>();
 }

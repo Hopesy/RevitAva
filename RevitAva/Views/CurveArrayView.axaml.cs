@@ -1,10 +1,11 @@
 using Avalonia.Controls;
-using Autodesk.Revit.UI;
+using CommunityToolkit.Mvvm.Messaging;
+using RevitAva.Messages;
 using RevitAva.ViewModels;
 
 namespace RevitAva.Views;
 
-public partial class CurveArrayView : Window
+public partial class CurveArrayView : Window, IRecipient<CloseWindowMessage>
 {
     private readonly CurveArrayViewModel _viewModel;
 
@@ -13,12 +14,26 @@ public partial class CurveArrayView : Window
         InitializeComponent();
         _viewModel = viewModel;
         DataContext = viewModel;
-        viewModel.CloseAction = () => Close();
+
+        WeakReferenceMessenger.Default.Register(this);
     }
 
-    public void Initialize(UIDocument uiDocument)
+    public void Receive(CloseWindowMessage message)
     {
-        _viewModel.Initialize(uiDocument, uiDocument.Document);
+        if (message.Value == typeof(CurveArrayView))
+        {
+            Close();
+        }
     }
 
+    /// <summary>
+    /// 窗口关闭后执行
+    /// </summary>
+    public void Execute() => _viewModel.Execute();
+
+    protected override void OnClosed(EventArgs e)
+    {
+        WeakReferenceMessenger.Default.Unregister<CloseWindowMessage>(this);
+        base.OnClosed(e);
+    }
 }

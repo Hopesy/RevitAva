@@ -30,8 +30,8 @@
                        Margin="0,0,0,16"
                        HorizontalAlignment="Stretch"
                        FormatString="0"
-                       Minimum="1"
                        Maximum="100"
+                       Minimum="1"
                        Value="{Binding Count}" />
 
         <!-- 包含端点选项 -->
@@ -51,7 +51,7 @@
             <Button Width="80"
                     Classes="Primary"
                     Command="{Binding ConfirmCommand}"
-                    Content="确认" />
+                    Content="选择曲线" />
         </StackPanel>
     </Grid>
 </Window>

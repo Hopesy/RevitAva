@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RevitAva.Commands;
 using Tuna.Revit.Extensions;
 using Avalonia;
+using RevitAva.Extensions;
 using RevitAva.Services.Interfaces;
 using Semi.Avalonia;
 
@@ -33,12 +34,16 @@ public class Application : IExternalApplication
         //创建UI面板，添加按钮
         this.CreateRibbon(application);
         // 启动 Host（必须在初始化 Avalonia 之前）
-        Host.Start();
+        var uiApp = application.GetUIApplication();
+        if (uiApp == null)
+        {
+            return Result.Failed;
+        }
+        Host.Start(uiApp);
         var logger = Host.GetService<ILogger<Application>>();
         //【重点】Avalonia不需要自己的消息循环就能运行，因为它蹭了Revit的消息循环来帮它把消息从操作系统里取出来，并分发给自己
-        // 初始化 Avalonia（借用 WPF 消息循环）
         // 第一次使用任何WPF类型时CLR自动加载Application类型,执行静态构造函数,初始化渲染引擎、主题样式等
-        // Avalonia跨平台,不能假设环境,必须显式配置平台后端和主题
+        // Avalonia跨平台,不能假设环境,必须显式配置平台后端和主题,wpf会自动完后曾
         // 注意：HotAvalonia 会通过 MSBuild 任务自动启用热重载（Debug 模式下）
         AppBuilder.Configure<AvaloniaApp>()
             .UsePlatformDetect()
