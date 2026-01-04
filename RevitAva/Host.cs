@@ -43,8 +43,6 @@ public static class Host
         // 注册 View 和 ViewModel
         builder.Services.AddTransient<Views.CurveArrayView>();
         builder.Services.AddTransient<ViewModels.CurveArrayViewModel>();
-        builder.Services.AddTransient<Views.SettingView>();
-        builder.Services.AddTransient<ViewModels.SettingViewModel>();
 
         _host = builder.Build();
         _host.Start();

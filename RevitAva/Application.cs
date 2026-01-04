@@ -80,12 +80,12 @@ public class Application : IExternalApplication
         // 服务面板
         tab.AddRibbonPanel("服务", panel =>
         {
-            panel.AddPushButton<SettingCommand>(button =>
+            panel.AddPushButton<SwitchThemeCommand>(button =>
                 {
                     button.LargeImage = new BitmapImage(
                         new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/setting.png"));
-                    button.ToolTip = "设置MCP服务";
-                    button.Title = "设置";
+                    button.ToolTip = "切换深色/浅色主题";
+                    button.Title = "切换主题";
                 });
         });
 

@@ -1,20 +1,19 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitAva.Extensions;
-using RevitAva.Views;
+using RevitAva.Services.Interfaces;
 
 namespace RevitAva.Commands;
 
 [Transaction(TransactionMode.Manual)]
-public class SettingCommand : IExternalCommand
+public class SwitchThemeCommand : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         try
         {
-            var window = Host.GetService<SettingView>();
-            window.ShowModal();
+            var themeService = Host.GetService<IThemeService>();
+            themeService.ToggleTheme();
             return Result.Succeeded;
         }
         catch (Exception ex)
