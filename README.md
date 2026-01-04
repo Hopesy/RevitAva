@@ -2,7 +2,7 @@
 
 > 在Revit插件中使用 Avalonia UI 框架构建现代化用户界面。Avalonia UI对.NET Framework的支持也非常好,本项目只是拿.net8举例。
 
-- **.NET 8** + **Avalonia UI 11.2.7**
+- **.NET 8** + **Avalonia UI 11.3.7**
 - **Revit 2026** + **Tuna.Revit.Extensions**
 - **CommunityToolkit.Mvvm** + **Microsoft.Extensions.Hosting**
 
@@ -32,7 +32,7 @@ dotnet add package CommunityToolkit.Mvvm --version 8.4.0
 
 ```xml
 <PropertyGroup>
-  <!-- 启用 Avalonia 编译时绑定 -->
+  <!-- 启用 Avalonia 编译时绑定，而不是反射绑定，能提高性能 -->
   <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 </PropertyGroup>
 ```
@@ -50,9 +50,10 @@ dotnet add package CommunityToolkit.Mvvm --version 8.4.0
 public class Application : IExternalApplication
 {
     private static bool _avaloniaInitialized;
-
+    //相比WPF多了个初始化操作是因为：
+    //第一次使用任何WPF类型时CLR自动加载Application类型,执行静态构造函数,初始化渲染引擎、主题样式等
     public Result OnStartup(UIControlledApplication application)
-    {
+    {   
         // 【重点】后续使用标准方式初始化-使用自定义Application(推荐)
         // 直接使用Avalonia.Application初始化
          AppBuilder.Configure<Avalonia.Application>()
@@ -154,7 +155,7 @@ Windows → 加载 Avalonia.Win32.dll
 - ❌ **不创建应用程序生命周期管理器**
 
 
-> 添加主题。Avalonia 没有内置主题，必须手动添加。FluentTheme 提供了所有控件的默认样式。
+> 添加主题。Avalonia 没有内置主题，必须手动添加。官方的FluentTheme提供了所有控件的默认样式，更推荐Semi.Avalonia主题，显示效果更好，可以一键完美替换。
 
 ```csharp
 Avalonia.Application.Current!.Styles.Add(new FluentTheme());
@@ -174,7 +175,6 @@ AppBuilder.Configure<Avalonia.Application>()
     .SetupWithoutStarting();  // ← 立即返回
 ```
 
-**效果**：
 ```
 Revit 启动
     ↓
@@ -529,7 +529,3 @@ HotAvalonia 3.0.2 **通过 MSBuild 任务自动集成**，无需在代码中显�
 3. **消息循环**：Avalonia 窗口自动注册到 Windows 消息系统，使用 Revit 的消息循环
 4. **共存原理**：通过独立的 HWND 和窗口过程，Avalonia 和 WPF 和平共处
 
-**更多详细信息**，请查看 `Docs/` 目录下的文档。
----
-
-**License**: MIT
