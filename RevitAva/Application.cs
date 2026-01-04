@@ -83,7 +83,7 @@ public class Application : IExternalApplication
             panel.AddPushButton<SwitchThemeCommand>(button =>
                 {
                     button.LargeImage = new BitmapImage(
-                        new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/setting.png"));
+                        new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/theme.png"));
                     button.ToolTip = "切换深色/浅色主题";
                     button.Title = "切换主题";
                 });

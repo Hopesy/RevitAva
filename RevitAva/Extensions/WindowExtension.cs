@@ -3,16 +3,20 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls;
 
 namespace RevitAva.Extensions;
-/*
- * 用最底层的 Win32 API (GetMessage) 截获了线程上的所有消息
- */
+
 public static class WindowExtension
 {
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-    
+
     [DllImport("user32.dll")]
     private static extern bool EnableWindow(IntPtr hWnd, bool bEnable);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool BringWindowToTop(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     private static extern bool GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
@@ -43,14 +47,10 @@ public static class WindowExtension
 
     private const int GWL_HWNDPARENT = -8;
 
-    /// <summary>
-    /// 获取 Revit 主窗口句柄
-    /// </summary>
     private static IntPtr RevitMainWindowHandle => Process.GetCurrentProcess().MainWindowHandle;
 
     /// <summary>
-    /// 以模态方式显示 Avalonia 窗口（适用于 Revit 插件环境）
-    /// 使用 Win32 消息循环实现阻塞
+    /// 以模态方式显示 Avalonia 窗口
     /// </summary>
     public static void ShowModal(this Window window)
     {
@@ -66,18 +66,22 @@ public static class WindowExtension
             }
         };
 
+        window.Closing += (_, _) =>
+        {
+            // 窗口关闭前先恢复 Revit 窗口并激活
+            EnableWindow(revitHandle, true);
+            SetForegroundWindow(revitHandle);
+            BringWindowToTop(revitHandle);
+        };
+
         window.Closed += (_, _) =>
         {
-            EnableWindow(revitHandle, true);
             closed = true;
         };
 
-        // 禁用 Revit 主窗口
         EnableWindow(revitHandle, false);
-        
         window.Show();
 
-        // Win32 消息循环阻塞，直到窗口关闭
         while (!closed && GetMessage(out var msg, IntPtr.Zero, 0, 0))
         {
             TranslateMessage(ref msg);
