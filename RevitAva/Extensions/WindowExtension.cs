@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 using Avalonia.Controls;
 
 namespace RevitAva.Extensions;
@@ -15,47 +16,17 @@ public static class WindowExtension
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-    [DllImport("user32.dll")]
-    private static extern bool BringWindowToTop(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern bool GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
-
-    [DllImport("user32.dll")]
-    private static extern bool TranslateMessage(ref MSG lpMsg);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr DispatchMessage(ref MSG lpMsg);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MSG
-    {
-        public IntPtr hwnd;
-        public uint message;
-        public IntPtr wParam;
-        public IntPtr lParam;
-        public uint time;
-        public POINT pt;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int X;
-        public int Y;
-    }
-
     private const int GWL_HWNDPARENT = -8;
 
     private static IntPtr RevitMainWindowHandle => Process.GetCurrentProcess().MainWindowHandle;
 
     /// <summary>
-    /// 以模态方式显示 Avalonia 窗口
+    /// 以模态方式显示 Avalonia 窗口（借用 WPF DispatcherFrame）
     /// </summary>
-    public static void ShowModal(this Window window)
+    public static void ShowWindow(this Window window)
     {
         var revitHandle = RevitMainWindowHandle;
-        var closed = false;
+        var frame = new DispatcherFrame();
 
         window.Opened += (_, _) =>
         {
@@ -68,24 +39,19 @@ public static class WindowExtension
 
         window.Closing += (_, _) =>
         {
-            // 窗口关闭前先恢复 Revit 窗口并激活
+            // 窗口关闭前先恢复 Revit 窗口并激活焦点
             EnableWindow(revitHandle, true);
             SetForegroundWindow(revitHandle);
-            BringWindowToTop(revitHandle);
         };
 
         window.Closed += (_, _) =>
         {
-            closed = true;
+            frame.Continue = false;
         };
 
         EnableWindow(revitHandle, false);
         window.Show();
 
-        while (!closed && GetMessage(out var msg, IntPtr.Zero, 0, 0))
-        {
-            TranslateMessage(ref msg);
-            DispatchMessage(ref msg);
-        }
+        Dispatcher.PushFrame(frame);
     }
 }

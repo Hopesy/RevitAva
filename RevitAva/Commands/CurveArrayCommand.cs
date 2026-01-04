@@ -17,7 +17,7 @@ public class CurveArrayCommand : IExternalCommand
         try
         {
             var window = Host.GetService<CurveArrayView>();
-            window.ShowModal();
+            window.ShowWindow();
             //由于不想在pick的时候临时关闭窗口，索性在窗口关闭后在执行pick，trans
             window.Execute();
             return Result.Succeeded;
