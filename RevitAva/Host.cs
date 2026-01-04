@@ -38,13 +38,17 @@ public static class Host
             .WriteTo.Console()
             .CreateLogger());
         //【3】添加服务如View,ViewModel,Service
-        //builder.Services.AddTransient<StartUpViewModel>();
-
         // 注册主题服务为单例
         builder.Services.AddSingleton<IThemeService, ThemeService>();
 
         // 注册 Revit 服务为单例
         builder.Services.AddSingleton<IRevitService, RevitService>();
+
+        // 注册 View 和 ViewModel
+        builder.Services.AddTransient<Views.CurveArrayView>();
+        builder.Services.AddTransient<ViewModels.CurveArrayViewModel>();
+        builder.Services.AddTransient<Views.SettingView>();
+        builder.Services.AddTransient<ViewModels.SettingViewModel>();
 
         host = builder.Build();
         host.Start();

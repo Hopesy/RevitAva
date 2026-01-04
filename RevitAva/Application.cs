@@ -71,16 +71,16 @@ public class Application : IExternalApplication
                 });
         });
 
-        // 建模工具面板
-        tab.AddRibbonPanel("建模工具", panel =>
+        // 阵列面板
+        tab.AddRibbonPanel("阵列", panel =>
         {
             panel.AddPushButton<CurveArrayCommand>(button =>
-                {
-                    button.LargeImage = new BitmapImage(
-                        new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/array.png"));
-                    button.ToolTip = "沿曲线阵列常规模型族";
-                    button.Title = "曲线阵列";
-                });
+            {
+                button.LargeImage = new BitmapImage(
+                    new Uri("pack://application:,,,/RevitAva;component/Resources/Icons/array.png"));
+                button.ToolTip = "沿曲线阵列常规模型";
+                button.Title = "曲线阵列";
+            });
         });
     }
 }

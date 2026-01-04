@@ -1,0 +1,57 @@
+<Window x:Class="RevitAva.Views.CurveArrayView"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:RevitAva.ViewModels"
+        Title="曲线阵列"
+        Width="400"
+        Height="280"
+        d:DesignHeight="280"
+        d:DesignWidth="400"
+        x:DataType="vm:CurveArrayViewModel"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        mc:Ignorable="d">
+
+    <Grid Margin="20" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
+        <!-- 族类型选择 -->
+        <TextBlock Grid.Row="0" Margin="0,0,0,8" Text="常规模型族类型:" />
+        <ComboBox Grid.Row="1"
+                  Margin="0,0,0,16"
+                  HorizontalAlignment="Stretch"
+                  DisplayMemberBinding="{Binding DisplayName}"
+                  ItemsSource="{Binding FamilySymbols}"
+                  SelectedItem="{Binding SelectedFamilySymbol}" />
+
+        <!-- 数量输入 -->
+        <TextBlock Grid.Row="2" Margin="0,0,0,8" Text="阵列数量:" />
+        <NumericUpDown Grid.Row="3"
+                       Margin="0,0,0,16"
+                       HorizontalAlignment="Stretch"
+                       FormatString="0"
+                       Minimum="1"
+                       Maximum="100"
+                       Value="{Binding Count}" />
+
+        <!-- 包含端点选项 -->
+        <CheckBox Grid.Row="4"
+                  Margin="0,0,0,16"
+                  Content="包含端点"
+                  IsChecked="{Binding IncludeEndPoints}" />
+
+        <!-- 按钮 -->
+        <StackPanel Grid.Row="5"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="10">
+            <Button Width="80"
+                    Command="{Binding CancelCommand}"
+                    Content="取消" />
+            <Button Width="80"
+                    Classes="Primary"
+                    Command="{Binding ConfirmCommand}"
+                    Content="确认" />
+        </StackPanel>
+    </Grid>
+</Window>

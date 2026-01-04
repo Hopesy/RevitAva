@@ -7,13 +7,14 @@ using RevitAva.Views;
 namespace RevitAva.Commands;
 
 [Transaction(TransactionMode.Manual)]
-public class SettingCommand : IExternalCommand
+public class CurveArrayCommand : IExternalCommand
 {
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         try
         {
-            var window = Host.GetService<SettingView>();
+            var window = Host.GetService<CurveArrayView>();
+            window.Initialize(commandData.Application.ActiveUIDocument);
             window.ShowModal();
             return Result.Succeeded;
         }

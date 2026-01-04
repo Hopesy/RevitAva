@@ -5,12 +5,12 @@ namespace RevitAva.Views;
 
 public partial class SettingView : Window
 {
-    public SettingView()
+    public SettingView(ViewModels.SettingViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = viewModel;
 
-#if DEBUG_R26
-        // Debug 模式下启用 DevTools（按 F12 打开）
+#if DEBUG
         this.AttachDevTools();
 #endif
     }
