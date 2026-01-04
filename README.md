@@ -1,6 +1,6 @@
 # RevitAva
 
-> 在 Revit 插件中使用 Avalonia UI 框架构建现代化用户界面。.net framework也是支持的，本项目只是拿.net8举例。
+> 在Revit插件中使用 Avalonia UI 框架构建现代化用户界面。Avalonia UI对.NET Framework的支持也非常好,本项目只是拿.net8举例。
 
 - **.NET 8** + **Avalonia UI 11.2.7**
 - **Revit 2026** + **Tuna.Revit.Extensions**

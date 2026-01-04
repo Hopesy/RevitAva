@@ -2,14 +2,14 @@
   <PropertyGroup>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
-    <LangVersion>12</LangVersion>
+    <LangVersion>latest</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
     <Authors>shiliu</Authors>
     <Copyright>Hopesy</Copyright>
     <ImplicitUsings>true</ImplicitUsings>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Configurations>Debug R26;Release R26</Configurations>
-    <!-- Avalonia 设置 -->
+    <!-- Avalonia设置,开启编译时绑定而不是反射绑定-->
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('R26'))">
