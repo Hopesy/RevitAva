@@ -8,18 +8,22 @@ using RevitAva.Services.Interfaces;
 using Semi.Avalonia;
 
 namespace RevitAva;
-/*  非模态：都依赖于主线程的消息循环
- *  Windows的消息分发基于HWND，不是基于框架，每个窗口有自己的HWND和WndProc，只要有一个消息循环在运行，所有窗口都能工作
- *  avalonia底层消息类型也是win32，所以主线程的消息循环可以正常处理avalonia的交互
+/* 【1】消息兼容机制
+ * 非模态：都依赖于主线程的消息循环
+ * Windows的消息分发基于HWND，不是基于框架，每个窗口有自己的HWND和WndProc，只要有一个消息循环在运行，所有窗口都能工作
+ * avalonia底层消息类型也是win32，所以主线程的消息循环可以正常处理avalonia的交互
  * Revit主线程本质是挂载着WPF的调度器System.Windows.Threading.Dispatcher,可以处理Revit消息和Win32消息(avalonia能借用的原因)
  * Revit的API、事务系统、空闲事件 (Idling) 都深度绑定在这个特定的调度器上。
- */
-/*
  * 模态时：主线程的消息循环暂停处理，内部又开了嵌套消息循环先处理当前窗口的所有交互
  * Avalonia是一个跨平台框架，它有自己的一套调度器Avalonia.Threading.Dispatcher,只关心自己的事件和基础的Win32消息,没法处理Revit消息
  * ShowDialog时候会暂停主线程消息循环，启动窗口的嵌套消息循环，wpf可以顺利处理Revit消息,avalonia却不认识Revit消息没法处理
- * 采用Show+手写消息循环模拟模态，卡住command中代码在视图显示那一行，这样一直有事务权限
- * 更重要的我们没办法调用Dialog因为要传avalonia的window
+ */
+/*
+ * 【2】事务机制
+ * 我们没办法调用Dialog,因为要传avalonia的window
+ * 只要能将代码卡在command里面，事务就能开启成功
+ * 因此采用Show+手写消息循环模拟模态，卡住command中代码在视图显示那一行，这样一直有事务权限
+ * 复杂的事务（比如涉及视图严重重绘，或者交互选取）可能出问题，还没测试
  */
 
 public class Application : IExternalApplication
