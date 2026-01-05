@@ -1,6 +1,6 @@
 # RevitAva
 
-> 在Revit插件中使用 Avalonia UI 框架构建现代化用户界面。Avalonia UI对.NET Framework的支持也非常好,本项目只是拿.net8举例。
+> 在Revit插件中使用 `Avalonia UI` 框架构建现代化用户界面。`Avalonia UI`对`.NET Framework`的支持也非常好,本项目只是拿.net8举例。完整案例地址:`https://github.com/Hopesy/RevitAva`
 
 - **.NET 8** + **Avalonia UI 11.3.7**
 - **Revit 2026** + **Tuna.Revit.Extensions**
@@ -16,7 +16,7 @@
 # Avalonia 核心包
 dotnet add package Avalonia --version 11.3.7
 dotnet add package Avalonia.Desktop --version 11.3.7
-# Avalonia 控件依赖于主题包才能显示
+# Avalonia 控件依赖于主题包才能显示,也可以替换为其他包比如semi
 dotnet add package Avalonia.Themes.Fluent --version 11.3.7
 
 # Debug 模式下的开发工具（F12调试）
@@ -53,7 +53,7 @@ public class Application : IExternalApplication
     //相比WPF多了个初始化操作是因为：
     //第一次使用任何WPF类型时CLR自动加载Application类型,执行静态构造函数,初始化渲染引擎、主题样式等
     public Result OnStartup(UIControlledApplication application)
-    {   
+    {
         // 【重点】后续使用标准方式初始化-使用自定义Application(推荐)
         // 直接使用Avalonia.Application初始化
          AppBuilder.Configure<Avalonia.Application>()
@@ -266,7 +266,7 @@ public static class WindowExtension
         {
             var handle = window.TryGetPlatformHandle()?.Handle;
             if (handle.HasValue && revitHandle != IntPtr.Zero)
-            {  
+            {
                 // 设置Revit 为拥有者 (Owner)
                 SetWindowLong(handle.Value, GWL_HWNDPARENT, revitHandle);
             }
@@ -278,7 +278,7 @@ public static class WindowExtension
             SetForegroundWindow(revitHandle);
         };
         window.Closed += (_, _) =>
-        {   
+        {
             // 【关键】告诉 Frame 循环可以结束了
             frame.Continue = false;
         };
